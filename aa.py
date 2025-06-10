@@ -3,25 +3,32 @@ import requests
 from pathlib import Path
 import shutil
 
-def clear_directory():
-    """清理SillyTavern相关目录，准备新下载"""
+def delete_specific_files():
+    """删除将要下载的四个特定文件（如果存在）"""
     base_dir = Path("/root/SillyTavern")
-    target_dirs = [
-        base_dir / "src",
-        base_dir / "src/middleware",
-        base_dir / "src/endpoints"
+    
+    files_to_delete = [
+        base_dir / "src/config.default.js",
+        base_dir / "src/middleware/ip-whitelist.js",
+        base_dir / "src/endpoints/users-lng.js",
+        base_dir / "src/endpoints/users-internal.js"
     ]
     
-    print("清理目标目录...")
-    for dir_path in target_dirs:
-        if dir_path.exists() and dir_path.is_dir():
-            # 仅删除目录中的文件，保留目录结构
-            for item in dir_path.iterdir():
-                if item.is_file():
-                    item.unlink()
-                    print(f"已删除文件: {item}")
+    print("删除指定目标文件...")
+    deleted_count = 0
     
-    print("清理完成，准备下载新文件。\n" + "="*50)
+    for file_path in files_to_delete:
+        if file_path.exists():
+            try:
+                file_path.unlink()
+                print(f"✓ 已删除: {file_path}")
+                deleted_count += 1
+            except Exception as e:
+                print(f"✗ 删除失败 [{file_path}]: {str(e)}")
+        else:
+            print(f"☑ 无需删除 (文件不存在): {file_path}")
+    
+    print(f"删除完成: 共删除 {deleted_count} 个指定文件\n" + "="*50)
 
 def download_file(url, destination):
     """下载文件到指定路径，自动创建目录"""
@@ -46,15 +53,16 @@ def main():
     base_dir = "/root/SillyTavern"
     base_url = "https://raw.githubusercontent.com/qilan2/st_qilan/refs/heads/main"
     
-    # 1. 先清理目录
-    clear_directory()
+    # 1. 只删除指定目标文件
+    delete_specific_files()
     
     # 2. 下载文件列表
     files_to_download = {
+        f"{base_url}/st2.py": f"{base_dir}/st2.py",
         f"{base_url}/config.default.js": f"{base_dir}/src/config.default.js",
         f"{base_url}/ip-whitelist.js": f"{base_dir}/src/middleware/ip-whitelist.js",
-        f"{base_dir}/users-lng.js": f"{base_dir}/src/endpoints/users-lng.js",
-        f"{base_dir}/users-internal.js": f"{base_dir}/src/endpoints/users-internal.js"
+        f"{base_url}/users-lng.js": f"{base_dir}/src/endpoints/users-lng.js",
+        f"{base_url}/users-internal.js": f"{base_dir}/src/endpoints/users-internal.js"
     }
     
     print(f"开始在 {base_dir} 下载配置文件...\n")
